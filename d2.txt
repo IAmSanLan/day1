@@ -1,0 +1,1219 @@
+#program to tokenize the input program.
+
+
+import re
+
+def lexical_analysis(code):
+    # Create a list of tokens
+    tokens = []
+    
+    # Split the code into lines
+    lines = code.split("\n")
+    print(lines)
+    # Iterate through each line of code
+    for line in lines:
+        # Split the line into words using regular expressions
+        words = re.split(r'[\s+]', line)
+        print(words)
+        # Iterate through each word
+        for word in words:
+            # Ignore empty strings
+            if word == "":
+                continue
+                
+            # Check if the word is a keyword
+            if word in ["int", "float", "double", "char", "void", "for", "while", "if", "else"]:
+                tokens.append(("keyword", word))
+                continue
+                
+            # Check if the word is an operator
+            if word in ["+", "-", "*", "/", "=", "==", "!=", ">", "<", ">=", "<="]:
+                tokens.append(("operator", word))
+                continue
+                
+            # Check if the word is a punctuation mark
+            if word in [";", ",", "{", "}"]:
+                tokens.append(("punctuation", word))
+                continue
+                
+            # If the word is none of the above, it is considered a identifier
+            tokens.append(("identifier", word))
+            
+    return tokens
+
+# Test the lexical analysis function
+code = """
+int main() {
+  int x = 5;
+  int y = 6;
+  int z = x + y;
+  return 0;
+}
+"""
+
+print(lexical_analysis(code))
+
+
+
+
+
+o/p:
+
+['', 'int main() {', '  int x = 5;', '  int y = 6;', '  int z = x + y;', '  return 0;', '}', '']
+['']
+['int', 'main()', '{']
+['', '', 'int', 'x', '=', '5;']
+['', '', 'int', 'y', '=', '6;']
+['', '', 'int', 'z', '=', 'x', '', '', 'y;']
+['', '', 'return', '0;']
+['}']
+['']
+[('keyword', 'int'), ('identifier', 'main()'),
+ ('punctuation', '{'), ('keyword', 'int'), ('identifier', 'x'),
+ ('operator', '='), ('identifier', '5;'), ('keyword', 'int'), ('identifier', 'y'),
+ ('operator', '='), ('identifier', '6;'), ('keyword', 'int'), ('identifier', 'z'), 
+('operator', '='), ('identifier', 'x'), ('identifier', 'y;'), ('identifier', 'return'), 
+('identifier', '0;'), ('punctuation', '}')]
+
+
+----------------------------------------------------
+
+----------------------------------------------------
+
+
+---------------------------------------------------
+#program for opm
+#compile in pycharm
+
+
+#!/usr/bin/env python
+# coding: utf-8
+
+# Operator Precedence Grammar
+#
+# Valid Grammar: E->E+E/E*E/id
+# Invalid Grammar:
+# S->SAS/a
+# A->bSb/b
+#
+# Valid Grammar:
+# S->SbSbS/SbS/a
+# A->bSb/b
+
+# #Sample Input
+# Enter the number of LHS variables..
+# 3
+# Enter the 1th grammar(production) want to be checked
+#  For null production please enter any special symbol or whitespace...
+# E->E+E
+# Enter the 2th grammar(production) want to be checked
+#  For null production please enter any special symbol or whitespace...
+# E->E*E
+# Enter the 3th grammar(production) want to be checked
+#  For null production please enter any special symbol or whitespace...
+# E->a
+# Grammar is accepted
+# Enter the operator used in the given grammar including the terminals
+#  non-treminals should be in cursive(small)letter+*a
+
+# In[11]:
+
+import numpy as np
+
+
+def stringcheck():
+    a = list(input(
+        "Enter the operator used in the given grammar including the terminals\n non-treminals should be in cursive(small)letter"))
+    a.append('$')
+    print(a)
+    l = list("abcdefghijklmnopqrstuvwxyz")
+    o = list('(/*%+-)')
+    p = list('(/*%+-)')
+    n = np.empty([len(a) + 1, len(a) + 1], dtype=str, order="C")
+    for j in range(1, len(a) + 1):
+        n[0][j] = a[j - 1]
+        n[j][0] = a[j - 1]
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(a) + 1):
+            if ((n[i][0] in l) and (n[0][j] in l)):
+                n[i][j] = ""
+            elif ((n[i][0] in l)):
+                n[i][j] = ">"
+            elif ((n[i][0] in o) and (n[0][j] in o)):
+                if (o.index(n[i][0]) <= o.index(n[0][j])):
+                    n[i][j] = ">"
+                else:
+                    n[i][j] = "<"
+            elif ((n[i][0] in o) and n[0][j] in l):
+                n[i][j] = "<"
+            elif (n[i][0] == "$" and n[0][j] != "$"):
+                n[i][j] = "<"
+            elif (n[0][j] == "$" and n[i][0] != "$"):
+                n[i][j] = ">"
+            else:
+                break
+    print("The Operator Precedence Relational Table\n=============================================")
+    print(n)
+    i = list(input("Enter the string want to be checked(non-terminals should be in cursive(small) letter..."))
+    i.append("$")
+    s = [None] * len(i)
+    q = 0
+    s.insert(q, "$")
+    x = [row[0] for row in n]
+    y = list(n[0])
+    h = 0
+    while (s[0] != s[1]):
+        if ((i[len(i) - 2] in p)):
+            break
+        elif ((s[q] in x) and (i[h] in y)):
+            if (n[x.index(s[q])][y.index(i[h])] == "<"):
+                q += 1
+                s.insert(q, i[h])
+                h += 1
+            elif (n[x.index(s[q])][y.index(i[h])] == ">"):
+                s.pop(q)
+                q -= 1
+            elif ((n[x.index(s[q])][y.index(i[h])] == '') and ((s[q] == "$") and (i[h] == "$"))):
+                s[1] = s[0]
+        else:
+            break
+    if (s[0] != s[1]):
+        return False
+    else:
+        return True
+
+
+def grammarcheck(i):
+    print("Enter the",
+          str(i + 1) + "th grammar(production) want to be checked\n For null production please enter any special symbol or whitespace...")
+    b = list(input().split("->"))
+    f = list("abcdefghijklmnopqrstuvwxyz")
+    if (b[0] == " " or b[0] == "" or b[0] in f or len(b) == 1):
+        return False
+    else:
+        b.pop(0)
+        b = list(b[0])
+        s = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        o = list("(abcdefghijklmnopqrstuvwxyz^/*+-|)")
+        sp = ['!', '@', '#', '$', '?', '~', '`', ',', ';', ':', '"', '=', '_', '&', "'", "", " "]
+        for i in range(0, len(b), 2):
+            if (b[i] == " "):
+                g = False
+            elif (b[i] in sp):
+                g = False
+                break
+            elif (b[len(b) - 1] in o and ((b[0] == "(" and b[len(b) - 1] == ")") or (b.count("(") == b.count(")")))):
+                g = True
+            elif (b[i] in f):
+                g = True
+            elif (b[len(b) - 1] in o):
+                g = False
+            elif ((i == len(b) - 1) and (b[i] in s)):
+                g = True
+            elif ((i == len(b) - 1) and (b[i] not in s) and (b[i] in o) and b[i - 1] in o):
+                g = True
+            elif ((b[i] in s) and (b[i + 1] in o)):
+                g = True
+            elif ((b[i] in s) and (b[i + 1] in s)):
+                g = False
+                break
+            else:
+                g = False
+                break
+        if (g == True):
+            return True
+        else:
+            return False
+
+
+c = int(input("Enter the number of LHS variables..\n"))
+for i in range(c):
+    if (grammarcheck(i)):
+        t = True
+    else:
+        t = False
+        break
+if (t):
+    print("Grammar is accepted")
+    if (stringcheck()):
+        print("String is accepted")
+    else:
+        print("String is not accepted")
+
+else:
+    print("Grammar is not accepted ")
+
+# In[ ]:
+
+o/p:
+
+Enter the number of LHS variables..
+5
+Enter the 1th grammar(production) want to be checked
+ For null production please enter any special symbol or whitespace...
+S->SbSbS
+Enter the 2th grammar(production) want to be checked
+ For null production please enter any special symbol or whitespace...
+S->SbS
+Enter the 3th grammar(production) want to be checked
+ For null production please enter any special symbol or whitespace...
+S->a
+Enter the 4th grammar(production) want to be checked
+ For null production please enter any special symbol or whitespace...
+A->bSb
+Enter the 5th grammar(production) want to be checked
+ For null production please enter any special symbol or whitespace...
+A->b
+Grammar is accepted
+Enter the operator used in the given grammar including the terminals
+ non-treminals should be in cursive(small)letterab$
+['a', 'b', '$', '$']
+The Operator Precedence Relational Table
+=============================================
+[['' 'a' 'b' '$' '$']
+ ['a' '' '' '>' '>']
+ ['b' '' '' '>' '>']
+ ['$' '<' '<' '' '']
+ ['$' '<' '<' '' '']]
+Enter the string want to be checked(non-terminals should be in cursive(small) letter...a
+String is accepted
+
+Process finished with exit code 0
+------------------------------------------------------------------------
+
+----------------------------------------------------------------------
+
+#code for first and follow 
+# #example for direct left recursion
+# gram = {"A":["Aa","Ab","c","d"]
+# }
+#example for indirect left recursion
+gram = {
+    "E":["E+T","T"],
+    "T":["T*F","F"],
+    "F":["(E)","i"]
+}
+
+def removeDirectLR(gramA, A):
+    """gramA is dictonary"""
+    temp = gramA[A]
+    tempCr = []
+    tempInCr = []
+    for i in temp:
+        if i[0] == A:
+            #tempInCr.append(i[1:])
+            tempInCr.append(i[1:]+[A+"'"])
+        else:
+            #tempCr.append(i)
+            tempCr.append(i+[A+"'"])
+    tempInCr.append(["e"])
+    gramA[A] = tempCr
+    gramA[A+"'"] = tempInCr
+    return gramA
+
+def checkForIndirect(gramA, a, ai):
+    if ai not in gramA:
+        return False 
+    if a == ai:
+        return True
+    for i in gramA[ai]:
+        if i[0] == ai:
+            return False
+        if i[0] in gramA:
+            return checkForIndirect(gramA, a, i[0])
+    return False
+
+def rep(gramA, A):
+    temp = gramA[A]
+    newTemp = []
+    for i in temp:
+        if checkForIndirect(gramA, A, i[0]):
+            t = []
+            for k in gramA[i[0]]:
+                t=[]
+                t+=k
+                t+=i[1:]
+                newTemp.append(t)
+
+        else:
+            newTemp.append(i)
+    gramA[A] = newTemp
+    return gramA
+
+def rem(gram):
+    c = 1
+    conv = {}
+    gramA = {}
+    revconv = {}
+    for j in gram:
+        conv[j] = "A"+str(c)
+        gramA["A"+str(c)] = []
+        c+=1
+
+    for i in gram:
+        for j in gram[i]:
+            temp = []   
+            for k in j:
+                if k in conv:
+                    temp.append(conv[k])
+                else:
+                    temp.append(k)
+            gramA[conv[i]].append(temp)
+
+    #print(gramA)
+    for i in range(c-1,0,-1):
+        ai = "A"+str(i)
+        for j in range(0,i):
+            aj = gramA[ai][0][0]
+            if ai!=aj :
+                if aj in gramA and checkForIndirect(gramA,ai,aj):
+                    gramA = rep(gramA, ai)
+
+    for i in range(1,c):
+        ai = "A"+str(i)
+        for j in gramA[ai]:
+            if ai==j[0]:
+                gramA = removeDirectLR(gramA, ai)
+                break
+
+    op = {}
+    for i in gramA:
+        a = str(i)
+        for j in conv:
+            a = a.replace(conv[j],j)
+        revconv[i] = a
+
+    for i in gramA:
+        l = []
+        for j in gramA[i]:
+            k = []
+            for m in j:
+                if m in revconv:
+                    k.append(m.replace(m,revconv[m]))
+                else:
+                    k.append(m)
+            l.append(k)
+        op[revconv[i]] = l
+
+    return op
+
+result = rem(gram)
+
+def first(gram, term):
+    a = []
+    if term not in gram:
+        return [term]
+    for i in gram[term]:
+        if i[0] not in gram:
+            a.append(i[0])
+        elif i[0] in gram:
+            a += first(gram, i[0])
+    return a
+
+firsts = {}
+for i in result:
+    firsts[i] = first(result,i)
+    print(f'First({i}):',firsts[i])
+#   temp = follow(result,i,i)
+#   temp = list(set(temp))
+#   temp = [x if x != "e" else "$" for x in temp]
+#   print(f'Follow({i}):',temp)
+
+def follow(gram, term):
+    a = []
+    for rule in gram:
+        for i in gram[rule]:
+            if term in i:
+                temp = i
+                indx = i.index(term)
+                if indx+1!=len(i):
+                    if i[-1] in firsts:
+                        a+=firsts[i[-1]]
+                    else:
+                        a+=[i[-1]]
+                else:
+                    a+=["e"]
+                if rule != term and "e" in a:
+                    a+= follow(gram,rule)
+    return a
+
+follows = {}
+for i in result:
+    follows[i] = list(set(follow(result,i)))
+    if "e" in follows[i]:
+        follows[i].pop(follows[i].index("e"))
+    follows[i]+=["$"]
+    print(f'Follow({i}):',follows[i])
+
+o/p:
+First(E): ['(', 'i']
+First(T): ['(', 'i']
+First(F): ['(', 'i']
+First(E'): ['+', 'e']
+First(T'): ['*', 'e']
+Follow(E): [')', '$']
+Follow(T): [')', '+', '$']
+Follow(F): [')', '*', '+', '$']
+Follow(E'): [')', '$']
+Follow(T'): [')', '+', '$']
+
+------------------------------------------------------------------------
+
+#code for 3 address code
+OPERATORS = set(['+', '-', '*', '/', '(', ')'])
+PRI = {'+':1, '-':1, '*':2, '/':2}
+
+### INFIX ===> POSTFIX ###
+def infix_to_postfix(formula):
+    stack = [] # only pop when the coming op has priority 
+    output = ''
+    for ch in formula:
+        if ch not in OPERATORS:
+            output += ch
+        elif ch == '(':
+            stack.append('(')
+        elif ch == ')':
+            while stack and stack[-1] != '(':
+                output += stack.pop()
+            stack.pop() # pop '('
+        else:
+            while stack and stack[-1] != '(' and PRI[ch] <= PRI[stack[-1]]:
+                output += stack.pop()
+            stack.append(ch)
+    # leftover
+    while stack: 
+        output += stack.pop()
+    print (f'postfix:{output}')
+    return output
+
+### THREE ADDRESS CODE GENERATION ###
+def generate3AC(pos):
+    print("### THREE ADDRESS CODE GENERATION ###")
+    exp_stack = []
+    t = 1
+    
+    for i in pos:
+        if i not in OPERATORS:
+            exp_stack.append(i)
+        else:
+            print(f't{t} := {exp_stack[-2]} {i} {exp_stack[-1]}')
+            exp_stack=exp_stack[:-2]
+            exp_stack.append(f't{t}')
+            t+=1
+
+expres = input("INPUT THE EXPRESSION: ")
+pos = infix_to_postfix(expres)
+generate3AC(pos)
+
+
+o/p:
+
+INPUT THE EXPRESSION: a+a(b-c)+(b-c)*d
+postfix:aabc-+bc-d*+
+### THREE ADDRESS CODE GENERATION ###
+t1 := b - c
+t2 := a + t1
+t3 := b - c
+t4 := t3 * d
+t5 := t2 + t4
+------------------------------------------------------------------------
+
+
+#code for infix to postfix
+OPERATORS = set(['+', '-', '*', '/', '(', ')'])
+PRI = {'+':1, '-':1, '*':2, '/':2}
+
+### INFIX ===> POSTFIX ###
+def infix_to_postfix(formula):
+    stack = [] # only pop when the coming op has priority 
+    output = ''
+    for ch in formula:
+        if ch not in OPERATORS:
+            output += ch
+        elif ch == '(':
+            stack.append('(')
+        elif ch == ')':
+            while stack and stack[-1] != '(':
+                output += stack.pop()
+            stack.pop() # pop '('
+        else:
+            while stack and stack[-1] != '(' and PRI[ch] <= PRI[stack[-1]]:
+                output += stack.pop()
+            stack.append(ch)
+    # leftover
+    while stack: 
+        output += stack.pop()
+    print(f'POSTFIX: {output}')
+    return output
+expres = input("INPUT THE EXPRESSION: ")
+pos = infix_to_postfix(expres)
+
+
+
+o/p:
+INPUT THE EXPRESSION: a+b*(b-c)(b-c)+d
+POSTFIX: abbc-bc-*+d+
+----------------------------------------------------------------------
+
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+#Evaluation rule of a Postfix Expression states
+
+# # While reading the expression from left to right, push the element in the stack if it is an operand.
+# Pop the two operands from the stack, if the element is an operator and then evaluate it.
+# Push back the result of the evaluation. Repeat it till the end of the expression.
+# Algorithm
+# 1) Create a stack to store operands (or values).
+# 2) Scan the given expression and do following for every scanned element.
+# 
+#      a) If the element is a number, push it into the stack
+#      b) If the element is a operator, pop operands for the operator from stack. Evaluate the operator and push the result back to the stack
+# 3) When the expression is ended, the number in the stack is the final answer
+
+# In[5]:
+
+def postfix_evaluation(s):
+
+    s=s.split()
+
+    n=len(s)
+
+    stack =[]
+
+    for i in range(n):
+
+        if s[i].isdigit():
+
+          #append function is equivalent to push
+
+            stack.append(int(s[i]))
+
+        elif s[i]=="+":
+
+            a=stack.pop()
+
+            b=stack.pop()
+
+            stack.append(int(a)+int(b))
+
+        elif s[i]=="*":
+
+            a=stack.pop()
+
+            b=stack.pop()
+
+            stack.append(int(a)*int(b))
+
+        elif s[i]=="/":
+
+            a=stack.pop()
+
+            b=stack.pop()
+
+            stack.append(int(b)/int(a))
+
+        elif s[i]=="-":
+
+            a=stack.pop()
+
+            b=stack.pop()
+
+            stack.append(int(b)-int(a))            
+
+    return stack.pop()
+
+#space separtor is required , for solving 2 or more digits .
+
+s="10 2 8 * + 3 -"
+
+val=postfix_evaluation(s)
+
+print(val)
+
+s="10 5 3 - / 2 6 * +"  # Original expression: 10/(5-3)+2*6
+
+val=postfix_evaluation(s)
+
+print(val)
+
+# In[ ]:
+
+o/p:
+23
+17
+------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+
+codes without o/p:
+2 n 3: 
+2. Write a program to create SPM for simple precedence grammar.
+package spm;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+public class SPM {
+ ArrayList<String> pro = new ArrayList<String>();
+ char [] tnt;
+ int e[][],f[][],l[][],fr[][],lt[][],gt[][];
+ int n,t,m,i,j;
+ BufferedReader br= new BufferedReader(new InputStreamReader(System.in));
+ @SuppressWarnings("empty-statement")
+ SPM() {
+ try {
+ System.out.println("Enter the number of non terminal symbol");
+ n=Integer.parseInt(br.readLine());
+ System.out.println("enter the number of terminal symbols");
+ t=Integer.parseInt(br.readLine());
+ m=n+t;
+ System.out.println("enter the production:");
+ String str="";
+ while(true) {
+ str=br.readLine();
+ if(str.equalsIgnoreCase("stop"))
+ break;
+ else
+ pro.add(str);
+ }
+ System.out.println("The productions are:");
+ for(String s:pro) {
+ System.out.println(s);
+ }
+ tnt=initTNT();
+ f=firstMatrix(pro);
+ l=lastMatrix(pro);
+ e=equalMatrix(pro);
+ System.out.println("Equal Matrix : = ");
+ printMatrix(e,tnt);
+ System.out.println("First Matrix : ");
+ printMatrix(f,tnt);
+ System.out.println("Last Matrix : ");
+ printMatrix(l,tnt);
+ fr=warshall(f);
+ lt=generateLT(e,f);
+ gt=generateGT(e,l,fr);
+ System.out.println("\n");
+ String[][] spm=generateSPM(e,lt,gt);
+ System.out.println("SPM Matrix :");
+ printMatrix(spm,tnt);
+ }
+ catch(IOException ex) {
+ Logger.getLogger(SPM.class.getName()).log(Level.SEVERE,null,ex);
+ }
+ }
+ private char[] initTNT() {
+ Character [] temp;
+ char [] a ={};
+ TreeSet<Character> t = new TreeSet<Character>();
+ for(int i=0;i<pro.size();i++) {
+ String s=pro.get(i);
+ for(int j=0;j<s.length();j++) {
+ if(!(j==1))
+ t.add(s.charAt(j));
+ }
+ }
+ temp=t.toArray(new Character[t.size()]);
+ a=new char[temp.length];
+ for(char c:temp) {
+ switch(c) {
+ case 'Z' :
+ a[0] ='Z';
+ break;
+ case 'M' :
+ a[1] ='M';
+ break;
+ case 'L' :
+ a[2] ='L';
+ break;
+ case 'a' :
+ a[3] ='a';
+ break;
+ case 'b' :
+ a[4] ='b';
+ break;
+ case '(' :
+ a[5] ='(';
+ break;
+ case ')' :
+ a[6]=')';
+ break;
+ }
+ }
+ return a;
+ }
+ private int[][] firstMatrix(ArrayList<String> a) {
+ int[][] k=new int [m][m];
+ for(int i=0;i<a.size();i++) {
+ char c =a.get(i).charAt(0);
+ char f =a.get(i).charAt(2);
+ check(c,f,k);
+ }
+ return k;
+ }
+ private int[][] lastMatrix(ArrayList<String> a){
+ int[][] k=new int [m][m];
+ String s="";
+ for(int i=0;i<a.size();i++) {
+ s=a.get(i);
+ char c =s.charAt(0);
+ char f =s.charAt(s.length()-1);
+ check(c,f,k);
+ }
+ return k;
+ }
+ private int[][] equalMatrix(ArrayList<String> a){
+ int[][] k=new int [m][m];
+ String s="";
+ for(int i=0;i<a.size();i++) {
+ s=a.get(i);
+ for(int j=2;j<s.length()-1;j++) {
+ char fsym =s.charAt(j);
+ char ssym =s.charAt(j+1);
+ check(fsym,ssym,k);
+ }
+ }
+ return k;
+ }
+ private int[][] check(char fsym,char ssym,int [][]k){
+ switch(fsym) {
+ case'Z':
+ k=popullate(0,ssym,k);
+ break;
+ case'M':
+ k=popullate(1,ssym,k);
+ break;
+ case'L':
+ k=popullate(2,ssym,k);
+ break;
+ case'a':
+ k=popullate(3,ssym,k);
+ break;
+ case'b':
+ k=popullate(4,ssym,k);
+ break;
+ case'(':
+ k=popullate(5,ssym,k);
+ break;
+ default :
+ k=popullate(6,ssym,k);
+ break;
+ }
+ return k;
+ }
+ private int[][] popullate(int index,char set,int[][]a){
+ switch(set) {
+ case 'Z':
+ a[index][0]=1;
+ break;
+ case 'M':
+ a[index][1]=1;
+ break;
+ case 'L':
+ a[index][2]=1;
+ break;
+ case 'a':
+ a[index][3]=1;
+ break;
+ case 'b':
+ a[index][4]=1;
+ break;
+ case '(':
+ a[index][5]=1;
+ break;
+ default :
+ a[index][6]=1;
+ break;
+ }
+ return a;
+ }
+ private int[][] warshall(int[][] d) {
+ int k;
+ m=d.length;
+ int[][] rt=d.clone();
+ for(j=0;j<m;j++) {
+ for(k=0;k<m;k++)
+ for(int l=0;l<m;l++)
+ if(d[j][k]==1 && d[k][l]==1)
+ rt[j][l]=1;
+ }
+ return rt;
+ }
+ public int[][] mul(int[][]a,int[][] b) {
+ int[][] mm=new int[a.length][a.length];
+ int k;
+ for(i=0;i<a.length;i++) {
+ for(j=0;j<a.length;j++)
+ for(k=0;k<a.length;k++)
+ mm[i][j]+=a[i][k]*b[k][j];
+ }
+ return mm;
+ }
+ private int[][] generateLT(int[][] a,int[][] b) {
+ return mul(a,b);
+ }
+ private int[][] generateGT(int[][] a,int[][] b,int[][] c) {
+ m=a.length;
+ int[][]id=new int[m][m];
+ int[][]idf=new int[m][m];
+ int[][]tran=new int[m][m];
+ int[][]ir=warshall(b);
+ for(i=0;i<a.length;i++) {
+ for(j=0;j<a.length;j++) {
+ tran[j][i]=ir[i][j];
+ if(i==j)
+ id[i][j]=1;
+ }
+ }
+ for(i=0;i<a.length;i++)
+ for(j=0;j<a.length;j++)
+ idf[i][j]=id[i][j] + c[i][j];
+ return mul(mul(tran,a),idf);
+ }
+ private String [][] generateSPM(int[][] eq,int[][] ith,int[][] gth) {
+ String[][] spm=new String[eq.length][eq.length];
+ for(i=0;i<eq.length;i++) {
+ for(j=0;j<eq.length;j++) {
+ if(eq[i][j]==1){
+ spm[i][j]="=";
+ }
+ else if(ith[i][j]==1) {
+ spm[i][j]="<";
+ }
+ else if(gth[i][j]==1) {
+ spm[i][j]=">";
+ }
+ else {
+ spm[i][j]="0";
+ }
+ }
+ }
+ return spm;
+ }
+ private void printMatrix(String [][]spm,char[] t)
+ {
+ System.out.print("\t");
+ for(int i=0;i<t.length;i++) {
+ System.out.print(t[i] + "\t\t");
+ }
+ System.out.print("\n");
+ for(i=0;i<spm.length;i++) {
+ System.out.print(t[i]);
+ for(j=0;j<spm.length;j++) {
+ System.out.print("\t"+spm[i][j]+"\t");
+ }
+ System.out.print("\n");
+ }
+ }
+ private void printMatrix(int [][]spm,char[] t) {
+ System.out.print("\t");
+ for(int i=0;i<t.length;i++) {
+ System.out.print(t[i] + "\t\t");
+ }
+ System.out.print("\n");
+ for(i=0;i<spm.length;i++)
+{
+ System.out.print(t[i]);
+ for(j=0;j<spm.length;j++)
+{
+ System.out.print("\t"+spm[i][j]+"\t");
+ }
+ System.out.print("\n");
+Name-Pranav Dasare Roll No-2281 }
+ }
+public static void main(String[] args)
+{
+ new SPM();
+ }}
+OUTPUT:
+ 
+.................
+
+10. Write a program to generate the target code based on the code production table for the Intermediate representation in three-address code format.
+// Program to generate simple code generator
+
+// ALGORITHM:
+// 1. Start
+// 2. Get address code sequence.
+// 3. Determine current location of 3 using address (for 1st operand).
+// 4. If current location not already exist generate move (B,O).
+// 5. Update address of A(for 2nd operand).
+// 6. If current value of B and () is null,exist.
+// 7. If they generate operator () A,3 ADPR.
+// 8. Store the move instruction in memory
+// 9. Stop
+
+//C program to implement Simple Code Generator.
+#include
+#include
+#include
+#include
+#include
+typedef struct
+{ char var[10];
+int alive;
+}
+regist;
+regist preg[10];
+void substring(char exp[],int st,int end)
+{ int i,j=0;
+char dup[10]="";
+for(i=st;i
+dup[j++]=exp[i];
+dup[j]='0';
+strcpy(exp,dup);
+} int getregister(char var[])
+{ int i;
+for(i=0;i<10;i++)
+{
+if(preg[i].alive==0)
+{
+strcpy(preg[i].var,var);
+break;
+}}
+return(i);
+}
+void getvar(char exp[],char v[])
+{ int i,j=0;
+char var[10]="";
+for(i=0;exp[i]!='\0';i++)
+if(isalpha(exp[i]))
+var[j++]=exp[i];
+else
+break;
+strcpy(v,var);
+}
+void main()
+{ char basic[10][10],var[10][10],fstr[10],op;
+int i,j,k,reg,vc,flag=0;
+clrscr();
+printf("\nEnter the Three Address Code:\n");
+for(i=0;;i++)
+{
+gets(basic[i]);
+if(strcmp(basic[i],"exit")==0)
+break;
+}
+printf("\nThe Equivalent Assembly Code is:\n");
+for(j=0;j
+{
+getvar(basic[j],var[vc++]);
+strcpy(fstr,var[vc-1]);
+substring(basic[j],strlen(var[vc-1])+1,strlen(basic[j]));
+getvar(basic[j],var[vc++]);
+reg=getregister(var[vc-1]);
+if(preg[reg].alive==0)
+{
+printf("\nMov R%d,%s",reg,var[vc-1]);
+preg[reg].alive=1;
+}
+op=basic[j][strlen(var[vc-1])];
+substring(basic[j],strlen(var[vc-1])+1,strlen(basic[j]));
+getvar(basic[j],var[vc++]);
+switch(op)
+{ case '+': printf("\nAdd"); break;
+case '-': printf("\nSub"); break;
+case '*': printf("\nMul"); break;
+case '/': printf("\nDiv"); break;
+}
+flag=1;
+for(k=0;k<=reg;k++)
+{ if(strcmp(preg[k].var,var[vc-1])==0)
+{
+printf("R%d, R%d",k,reg);
+preg[k].alive=0;
+flag=0;
+break;
+}} if(flag)
+{
+printf(" %s,R%d",var[vc-1],reg);
+printf("\nMov %s,R%d",fstr,reg);
+}strcpy(preg[reg].var,var[vc-3]);
+getch();
+}}
+
+OUTPUT
+
+
+
+
+
+-----------------------------------------------------
+
+thoery:
+
+Lexical Analysis is the first phase of the 
+compiler also known as a scanner. It converts the 
+High level input program into a sequence of Tokens.
+...............
+
+A simple precedence grammar is one in which we can insert
+symbols "<", "=", and ">" to produce a language (treating "<" and
+">" as parentheses) that can be parsed like a parenthesized
+grammar.
+To parse a simple precedence language we need a precedence
+table. The entries are the new symbols "<", "=" and ">", indexed
+by the symbols that could be on the stack (all terminals and 
+nonterminals) and any symbols we might push on the stack (also all
+terminals and non-terminals).
+At each step we insert the symbol from the table between the
+current stack top and the new symbol to be pushed on. If the table
+entry is ">" we do a reduction before pushing anything new onto
+the stack.
+We always start with "<" and the first token on the stack, and at
+EOF push ">". We should end with the Start symbol on the stack.
+
+..................
+precedence grammar is kinds of shift reduce parsing method. It is 
+applied to a small class of operator grammars.
+
+.........................
+
+Operator precedence parsers use precedence functions that map 
+terminal symbols to integers, and the precedence relations 
+between the symbols are implemented by numerical comparison. 
+The parsing table can be encoded by two precedence functions 
+f and g that map terminal symbols to integers.
+................
+
+Arden’s theorem state that: “If P and Q are two regular 
+expressions over $\sum_   , and if P does not contain $\epsilon_   
+, then the following equation in R given by R = Q + RP has a 
+unique solution i.e., R = QP*.” That means, whenever we get any 
+equation in the form of R = Q + RP, then we can directly replace 
+it with R = QP*. So, here we will first prove that R = QP* is the 
+solution of this equation and then prove that it is the unique 
+solution of this equation. Let’s start by taking this equation as equation (i)
+
+R = Q + RP  ......(i)
+Now, replacing R by R = QP*, we get,
+
+R = Q + QP*P 
+Taking Q as common,
+
+R = Q($\epsilon_ + P*P)
+R = QP*  
+(As we know that $\epsilon_   + R*R = R*). Hence proved. 
+Thus, R = QP* is the solution of the equation R = Q + RP. 
+Now, we have to prove that this is the only solution to 
+this equation. Let me take this equation again:
+
+
+R = Q + RP
+Now, replace R by R = Q + RP,
+
+R = Q + (Q + RP)P
+  = Q + QP + RP^2 
+Again, replace R by R = Q + RP:-
+
+R = Q + QP + (Q + RP) P^2  = Q + QP + QP^2 + RP^3 
+ = ...  = ...  =  Q + QP + QP^2 + .. + QP^n + RP^{(n+1)} 
+Now, replace R by R = QP*, we get,
+
+R = Q + QP + QP^2 + .. + QP^n + QP*P^{(n+1)} 
+Taking Q as common,
+
+R = Q($\epsilon_ + P + P^2 + .. + P^n + P*P^{(n+1)})  = QP*   
+ [As $\epsilon_ + P + P^2 + .. + P^n + P*P^{(n+1)} represent        
+   the closure of P] 
+Hence proved. Thus, R = QP* is the unique solution of the 
+equation R = Q + RP. 
+
+Note :
+
+Arden’s theorem is used to convert given finite automata to
+ a regular expression.
+
+To understand this theorem, we will solve an example: 
+................
+
+FIRST and FOLLOW are two functions associated 
+with grammar that help us fill in the entries of an M-table.
+
+FIRST ()− It is a function that gives the set of 
+terminals that begin the strings derived from the production rule.
+
+A symbol c is in FIRST (α) if and only if α ⇒ cβ 
+for some sequence β of grammar symbols.
+
+A terminal symbol a is in FOLLOW (N) if and only if 
+there is a derivation from the start symbol S of the 
+grammar such that S ⇒ αNαβ, where α and β are a 
+(possible empty) sequence of grammar symbols. In other 
+words, a terminal c is in FOLLOW (N) if c can follow N at 
+some point in a derivation.
+
+Benefit of FIRST ( ) and FOLLOW ( )
+
+It can be used to prove the LL (K) characteristic of grammar.
+
+It can be used to promote in the construction of predictive parsing tables.
+
+It provides selection information for recursive descent parsers.
+............
+
+Context free grammar is a formal grammar which is used
+ to generate all possible strings in a given formal language.
+
+Context free grammar G can be defined by four tuples as:
+
+G= (V, T, P, S)  
+Where,
+
+G describes the grammar
+Play Video
+
+
+T describes a finite set of terminal symbols.
+V describes a finite set of non-terminal symbols
+P describes a set of production rules
+S is the start symbol.
+
+In CFG, the start symbol is used to derive the string. 
+You can derive the string by repeatedly replacing a non-terminal by
+ the right hand side of the production, until all non-terminal have
+ been replaced by terminal symbols.
+..............
+Three address code is a type of intermediate code
+ which is easy to generate and can be easily converted
+ to machine code.It makes use of at most three addresses 
+and one operator to represent an expression and the value
+ computed at each instruction is stored in temporary variable 
+generated by compiler. The compiler decides the order of
+ operation given by three address code.
+
+General representation –
+
+ a = b op c 
+Where a, b or c represents operands like names, constants
+ or compiler generated temporaries and op represents the operator
+
+Implementation of Three Address Code –
+There are 3 representations of three address code namely
+
+Quadruple
+Triples
+Indirect Triples
+.................
+
+nfix expression: The expression of the form a operator
+ b (a + b). When an operator is in-between every pair of operands.
+Postfix expression: The expression of the form a b
+ operator (ab+). When an operator is followed by every pair of operands.
+
+Examples:
+
+Input: A + B * C + D
+Output: ABC*+D+
+
+
+Input: ((A + B) – C * (D / E)) + F
+Output: AB+CDE/*-F+  
+........................
+
