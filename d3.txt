@@ -1,0 +1,859 @@
+1]] 
+
+Demonstrate distributed databases environment by dividing given 
+global conceptual schema, into vertical and Horizontal fragments
+ and place them on different nodes. Execute queries on these fragments.
+
+
+Vertical Fragmentation
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Connect system
+    Enter password: system
+
+
+> alter user hr identified by hr account unlock;
+
+
+
+Creating Emp_1
+
+create table emp_1 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50));
+insert into emp_1 values('e001','Ajay','Kalyan');
+insert into emp_1 values('e002','Jay','Thane');
+insert into emp_1 values('e003','Karan','Thane');
+insert into emp_1 values('e004','Ronak','Dombivli');
+
+> commit;
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Now for hr database:
+Connect using : 
+SQL>connect hr
+Password: hr
+
+
+Creating Emp_2 
+create table emp_2 (eno varchar2(4) PRIMARY KEY,email varchar2(50),salary number(7,2));
+insert into emp_2 values ('e001',’ajay@gmail.com’,25000);
+insert into emp_2 values ('e002',’jay@gmail.com’,28000);
+insert into emp_2 values ('e003',’karan@gmail.com’,25000);
+insert into emp_2 values ('e004',’ronak@gmail.com’,27000);
+
+
+>commit;
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+after creating table in hr at "system" this code will come 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+select ora_database_name from dual;
+
+
+create public database link “prac_3” connect to hr identified by hr using 'XE';
+
+select*from emp_2@prac_3;
+
+
+select salary from emp_2@prac_3 where eno='e001';
+
+select email from emp_2@prac_3 e2,emp_1@XE e1 where e2.eno=e1.eno and e1.ename='Ajay';
+
+select ename,email from emp_1@XE e1 ,emp_2@prac_3 e2 where e1.eno=e2.eno and e1.eno='e003';
+
+select ename from emp_1@XE e1,emp_2@prac_3 e2 where e1.eno=e2.eno and e2.salary=25000;
+
+Horizontal Fragmentation
+-------------------------------------------------------------------------------------------------------------------------------------
+open system :-
+
+
+>alter user hr identified by hr account unlock;
+
+
+
+create table emp_21 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50), email varchar2(50),salary number(7,2));
+
+insert into emp_21 values('e001','Salil','Andheri','salil@gmail.com',20000);
+
+insert into emp_21 values('e003','Crima','Bandra','crima@gmail.com',20000);
+
+insert into emp_21 values('e004','Haneet','Bandra','haneet@gmail.com',16000);
+
+
+select * from emp_21;
+
+
+>commit;
+
+
+---------------------------------------------------------------------------------------------------------
+
+connect to hr
+enter password 
+connected.
+
+
+
+create table emp_22 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50), email varchar2(50),salary number(7,2));
+
+insert into emp_22 values('e002','Divyata','Bandra','divyata@gmail.com',10000);
+insert into emp_22 values('e004','Harshada','Wadala','harshada@gmail.com',10000);
+
+
+select * from emp_22;
+
+
+>commit;
+
+
+-------------------------------------------------------------------------------------------------------
+
+open the "system" and put the command:-
+
+------------------------------------------------------------------------------------------------------------------
+
+create public database link "prac1_link" connect to hr identified by hr using 'XE';
+
+
+select * from emp_22@prac1_link;
+
+select salary from emp_21 union select salary from emp_22@prac1_link;
+
+select email from emp_21 where salary=20000 union select email from emp_22@prac1_link where salary=20000;
+
+select ename,email from emp_22@prac1_link e2 where e2.eno='e002'
+union select ename,email from emp_21 e1 where e1.eno='e002';
+
+select ename,address from emp_21 e1 where e1.eno='e002' union select ename,address from emp_22@prac1_link e2 where e2.eno='e002';
+
+
+
+
+============================================================================================================================================================================
+===========================================================================================================================================================================================
+========================================================================================================================================================================================
+
+Aim: Create an XML database and demonstrate insert, 
+update and delete operations on these tables. Issue queries on it.
+
+
+SQL> connect system
+	Password: system
+
+
+create table emp(dept_id number(4), emp_spec XMLType);
+insert into emp values(1001,XMLType( 
+'<employees>
+<emp id="001">
+<name>Salil Gala</name>
+<email>salil@gmail.com</email>
+<acc_no>101</acc_no>
+<dateofjoining>1994-12-24</dateofjoining>
+</emp>
+</employees>'));
+
+Insert into emp values(1001,XMLType(
+'<employees>
+<emp id="002">
+<name>Rahul Surya</name>
+<email>rahul@gmail.com</email>
+<acc_no>102</acc_no>
+<dateofjoining>1995-1-21</dateofjoining>
+</emp>
+</employees>'));
+
+
+
+
+Insert into emp values(1002,XMLType(
+'<employees>
+<emp id="003">
+<name>Ramu kaka</name>
+<email>ramurocks@gmail.com</email>
+<acc_no>103</acc_no>
+<dateofjoining>1996-1-5</dateofjoining>
+</emp>
+</employees>'));
+
+
+>select * from emp; 
+
+1) To Find the salary of all employees.
+SQL> select salary from emp_21 union select salary emp_22@prac1_link;
+
+2) To Find the Email of all employees where salary = 20000
+SQL> select email from emp_21 where salary=20000 union
+select email from emp22@ prac1_link where salary=20000;
+
+3) To Find the employee name and Email where employee number is known.  
+SQL> select ename,email from emp_22@prac1_link e2 where e2.eno='e002'
+union select ename,email from emp_21 e1 where e1.eno='e002';
+
+4) To Find the employee name and address where employee number is known
+SQL> select ename,address from emp_21 e1 where e1.eno='e001' union select ename,email from emp_22@prac1_link e2 where e2.eno='e001';
+
+
+----------------------------------------------
+2]]
+
+Create an XML database and demonstrate insert, update and delete
+ operations on these tables. Issue queries on it.
+
+Procedure: 
+
+First connect to system using 
+SQL> connect system
+	Password: system
+
+1.Creating table with XMLType
+Syntax: create table emp(dept_id number(4), emp_spec XMLType);
+insert into emp values(1001,XMLType( 
+'<employees>
+<emp id="001">
+<name>San Lan</name>
+<email>iamsan@gmail.com</email>
+<acc_no>101</acc_no>
+<dateofjoining>1994-12-24</dateofjoining>
+</emp>
+</employees>'));
+
+Insert into emp values(1001,XMLType(
+'<employees>
+<emp id="002">
+<name>Rahul thakur</name>
+<email>rk10@gmail.com</email>
+<acc_no>102</acc_no>
+<dateofjoining>1995-1-21</dateofjoining>
+</emp>
+</employees>'));
+
+
+
+
+Insert into emp values(1002,XMLType(
+'<employees>
+<emp id="003">
+<name>Sharon</name>
+<email>ronron@gmail.com</email>
+<acc_no>103</acc_no>
+<dateofjoining>1996-1-5</dateofjoining>
+</emp>
+</employees>'));
+
+1)Retrieve the names of employee from employee table 
+select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names" from emp e;
+
+2) Retrieve the acc_no  of employee from employee table  
+select e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no" from emp e;
+
+3) Retrieve the names, acc_no, email of employees from employee table  
+select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names",e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no",e.emp_spec.extract('/employees/emp/email/text()').getStringVal() "email" from emp e;
+
+4) Updating XMLType
+update emp e set emp_spec=XMLType(
+'<employees>
+<emp id="002">
+<name>RK</name>
+</emp>
+</employees>')
+where
+e.emp_spec.extract('/employees/emp/@id').getStringVal()='002';
+
+SQL> select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names" from emp e;
+
+5) Deleting an XMLType Column Row
+delete from emp e where  e.emp_spec.extract('/employees/emp/@id').getStringVal()='003';
+SQL> select e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no" from   emp e;
+
+
+--------------------------------------------------------
+3]]
+
+Create different types that include attributes and methods. 
+Define tables for these types by adding enough tuples. 
+Demonstrate insert, update and delete operations on these tables.
+ Execute queries on them.
+
+
+SQL>connect system
+		Password:system
+
+
+create type addrtype as object (pincode number(6),street varchar2(20),city varchar2(20),state varchar2(20));
+/
+
+
+create type branchtype as object (address addrtype,phone1 number(8),phone2 number(8));
+ /
+
+create type authortype as object (name varchar2(10), addr addrtype);
+/
+
+
+create type branchtabletype as table of branchtype;
+/
+
+
+create type publishertype as object (name varchar2(30), addr addrtype, branches branchtabletype);
+/
+
+create type authorlisttype as varray(2) of ref authortype;
+/
+
+
+create table authors of authortype;
+
+create table books (title varchar2(10), year date ,published_by ref publishertype, authors authorlisttype);
+
+create table publishers of publishertype nested table branches store as branchtable;
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Table Name: Authors:-
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+insert into authors values ('Aho',addrtype(400068,'s.v.rd.','Mumbai','Maharashtra'));
+
+insert into authors values ('Stallings',addrtype(400052,'r.t.rd.','Pune','Maharashtra'));
+
+insert into authors values ('Jerry',addrtype(400092,'j.s.rd.','Nashik','Maharashtra'));
+
+insert into authors values ('Provakis',addrtype(500012,'l.t.rd.','Baroda','Gujarat'));
+
+insert into authors values ('Rabiner',addrtype(500014,'s.v.rd.','Nagpur','Maharashtra'));
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Table Name: Publishers:-
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Insert into publishers values ('BPB publication' , addrtype (400068 ,'s.v.rd.','Mumbai','Maharashtra') , branchtabletype(branchtype(addrtype(400068,'s.v.rd.','Mumbai','Maharashtra'),28964401,28946601)));
+
+Insert into publishers values('Navneet Prakashan', addrtype (400068,'r.m.rd','Mumbai' , 'Maharashtra'),branchtabletype(branchtype(addrtype(400068,'r.m.rd','mumbai','maharashtra'),28952210,28952211)));
+
+Insert into publishers values('Sheth', addrtype (400068,'r.m.rd','Mumbai','Maharashtra') , branchtabletype(branchtype(addrtype(500014,'s.v.rd','Nagpur','Maharashtra'),28952210,28952211)));
+
+Insert into publishers values('Sheth', addrtype(500012,'l.t.rd','Baroda','Gujarat'), branchtabletype(branchtype(addrtype(500012,'l.t.rd','Baroda','Gujarat'),28952295,28951210)));
+
+select * from publishers;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Table Name: Books
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+insert into books select 'Java','20-may-1983',ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name='BPB publication' and aut.name='Stallings';
+
+insert into books select 'Compiler','20-june-1980',ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name='Navneet Prakashan' and aut.name='Aho';
+
+insert into books select 'AI','25-june-1540',ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name='Sheth' and aut.name='Jerry';
+
+
+Select * from books;
+
+
+a) List all of the authors that have the same address as their publisher
+
+select a.name from authors a, publishers p where a.addr = p.addr;
+
+
+b) List all of the authors that have the same pin code as their publisher
+
+select a.name from authors a,publishers p where p.addr.pincode=a.addr.pincode;
+
+
+c) List all books that have 2 or more authors
+
+Select b.title from books b where 1< (select count(*) from table(b.authors));
+
+
+d) List the title of the book that has the most authors
+
+Select title from books b, table(b.authors) group by title having count(*) = (select max(count(*)) from books b, table(b.authors) group by title);
+
+
+e) List the name of the publisher that has the most branches
+
+Select p.name from publishers p, table(p.branches) group by p.name having count(*)>=all (select count(*) from publishers p, table(p.branches) group by name);
+
+
+f) Name of authors who have not published a book
+
+select (a.name) from authors a minus select a.name from books b, table(b.authors) b1, authors a where b1.column_value=ref(a);
+
+g) Move all the branches that belong to the publisher 'tata' to the publisher ‘‘joshi'
+
+insert into table(select branches from publishers where name = 'Navneet Prakashan') select b.* from publishers p, table(p.branches) b where name = 'Sheth';
+
+
+h) List all authors who have published more than one book
+
+select a.name from authors a, books b, table(b.authors) b1 where b1.column_value =ref(a) group by a.name having count(*) > 1; 
+
+
+i) List all books (title) where the same author appears more than once on the list of authors (assuming that an integrity constraint requiring that the name of an author is unique in a list of authors has not been specified).
+
+select title from authors a, books b, table(b.authors) v where v.column_value = ref(a) group by title having count(*) > 1;
+
+
+
+
+
+-----------------------------------------------
+4]]
+
+Create a table that stores spatial data and issues queries on it.
+
+Procedure: SQL>connect system
+		Password: system
+
+
+SQL> create table market (mkt_no number(3) primary key,mkt_name varchar2(20),mkt_shape mdsys.sdo_geometry);
+
+
+Inserting values:
+1)This  insert query inserts the abc shape in the table.
+
+insert into market values(
+1,
+'abc',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array(1,1003,3), -- one rectangle (1003 =exterior)
+mdsys.sdo_ordinate_array(1,1, 5,7) 
+-- only 2 points needed to
+-- define rectangle (lower left and upper right) with
+-- Cartesian-coordinate data
+)
+)
+/
+
+
+2) This insert query inserts the pqr shape in the table.
+
+insert into market values(
+2,
+'pqr',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array (1,1003,1), 
+-- one polygon (exterior polygon ring)
+mdsys.sdo_ordinate_array (5,1, 8,1, 8,6, 5,7, 5,1)
+)
+)
+/
+
+
+
+3) This insert query inserts the mno shape in the table.
+
+
+insert into market values(
+3,
+'mno',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array (1,1003,1), 
+-- one polygon (exterior polygon ring)
+mdsys.sdo_ordinate_array (3,3,6,3,6,5,4,5,3,3)
+)
+)
+/
+
+
+4)This insert query inserts the xyz shape in the table.
+
+Insert into market values(
+4,
+’xyz’,
+mdsys.sdo_geometry(
+2003, -- 2-dimensional polygon
+NULL,NULL, mdsys.sdo_elem_info_array(1,1003,4), -- one circle
+mdsys.sdo_ordinate_array(8,7, 10,9, 8,11)
+)
+)
+/
+
+
+View Table:
+
+select * from market;
+
+
+
+SQL>create table university(shape mdsys.sdo_geometry);
+
+insert into user_sdo_geom_metadata values (
+’university’,
+’shape’,
+mdsys.sdo_dim_array( 
+mdsys.sdo_dim_element(’x’, 0, 20, 0.005),
+mdsys.sdo_dim_element(’y’, 0, 20, 0.005)
+),
+ NULL
+)
+/
+
+
+
+create index university_spatial_idx
+
+on university(shape)
+
+indextype is mdsys.spatial_index;
+
+select * from user_sdo_geom_metadata;
+
+
+
+
+1) Topological intersection of two geometries.
+
+select sdo_geom.sdo_intersection(c_a.mkt_shape, c_c.mkt_shape, 0.005)
+from market c_a, market c_c
+
+where c_a.mkt_name = 'abc' and c_c.mkt_name = 'mno';
+
+
+
+2) Do two geometries have any spatial relationship?
+
+SQL>select sdo_geom.relate(c_b.mkt_shape, 'anyinteract', c_d.mkt_shape, 0.005)
+from market c_b, market c_d
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+SQL>select sdo_geom.relate(c_b.mkt_shape, 'anyinteract', c_d.mkt_shape, 0.005)
+from market c_b, market c_d
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+
+
+3) Return the areas of all different locations.
+
+select mkt_name, sdo_geom.sdo_area(mkt_shape, 0.005) from market;
+
+
+
+4) Return the area of just abc.
+
+select mkt_name, sdo_geom.sdo_area(mkt_shape, 0.005) from market
+
+where mkt_name = 'abc';
+
+
+5) Return the distance between two geometries.
+
+select sdo_geom.sdo_distance(c_b.mkt_shape, c_d.mkt_shape, 0.005)
+
+from market c_b, market c_d
+
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+6)Is a geometry valid?
+
+select mkt_name, sdo_geom.validate_geometry_with_context(mkt_shape, 0.005)
+
+from market where mkt_name = 'mno';
+
+
+
+---------------------------------------------
+5]]
+
+Create a table that stores temporal data and issues queries on it.
+
+Procedure: SQL>connect system
+		Password: system
+
+
+Create table tblEmp_Appnt (empno number(3),empname varchar2(20),recruit_date date, retire_date date);
+
+insert into tblEmp_Appnt values(1,’Sahil’,to_date(sysdate,’DD-MM-YYYY’), to_date(’25-10-2023’, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(2,’Mooti’, to_date(’18-11-1999’,’DD-MM-YYYY’),to_date (sysdate, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(3,’Nobita’,to_date(’2-3-2001’,’DD-MM-YYYY’), to_date (’2-10-2005’,’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(4,’Madre’,to_date(’2-8-1989’,’DD-MM-YYYY’), to_date (’4-5-2001’, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(5,’Pooja’,to_date(’5-12-1999’,’DD-MM-YYYY’), to_date (’6-11-2006’,’DD-MM-YYYY’));
+
+select * from tblEmp_Appnt;
+
+
+
+1) Find all the employees who join the company on 2/3/2001
+
+SQL> select empname from tblEmp_Appnt where recruit_date=to_date('2-3-2001','DD-MM-YYYY');
+
+
+b) Find all the employees who will retired  on 6/11/2006
+
+SQL> select empname from tblEmp_Appnt where retire_date=to_date('6-11-2006','DD-MM-YYYY');
+
+
+SQL> select sysdate from dual;
+
+
+SQL>alter session set nls_date_format = 'HH:MI';
+
+
+SQL>create table tbl_share (name varchar2(20),no_shares number(5),price number(7,2),trans_time date);
+
+insert into tbl_share values ('Infosys',120,1200,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Sintex',12,1540,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Titan',160,154,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Reliance',100,1700,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Tata Steel',10,2700,to_date(sysdate,'HH:Mi'));
+
+select * from tbl_share;
+
+
+
+1) Find all the names of a company whose share price is more than Rs. 1000 at   14:21 A.M. 
+
+SQL>select name from tbl_share where (no_shares*price)>120 and trans_time=to_date('09:34','HH:MI');
+
+
+2)Find the name of company which has highest share price at 2.24 P.M.
+
+SQL> select name from  tbl_share  where no_shares*price= (select max(no_shares*price) from tbl_share where trans_time=to_date('09:35','HH:MI'))
+/
+
+
+-----------------------------------------------
+6]]
+
+Demonstrate the Accessing and Storing and performing CRUD
+ operations in a. MongoDB
+
+Procedure: CRUD stands for Create, Read, Update, Delete.
+
+
+1)CREATE
+
+use COLLEGE
+
+db.Student.insert({student_id : 001, name : “Vijay”, roll_no : 1, division : “A”})
+db.Student.insert({student_id : 002, name : “Jay”, roll_no : 2, division : “A”})
+
+
+2)READ
+
+db.Student.find()
+
+3)UPDATE
+
+db.Student.update({name : “Jay”}, {$set:{name : “Raju”}})
+
+
+4)DELETE
+db.Student.remove({name : “Vijay”})
+db.Student.drop()
+---------------------------------------------------------
+
+
+7]]
+Demonstrate the Accessing and Storing and performing 
+CRUD operations in a. HBase
+
+Procedure: 
+Step1: Install VM Oracle. intall Ubuntu on VM oracle
+# Installing Java
+1. In Ubuntu, open the terminal and enter the following command:
+	$ sudo apt install default-jdk default-jre -y
+2. Verify the installation via
+	$ java -version
+
+
+# Create new user Hadoop and configure password-less SSH
+1. Create the new user
+	$ sudo adduser hadoop
+2. Add the hadoop user to the sudo group.
+	$ sudo usermod -aG sudo hadoop
+3. Log out of the current user and switch to the newly created Hadoop user
+4. In terminal, install openssh client and server
+	$ apt install openssh-server openssh-client -y
+5. Generate public and private key pairs.
+	$ ssh-keygen -t rsa
+6. Add the generated public key from id_rsa.pub to authorized_keys.
+	$ sudo cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+7. Change the permissions of the authorized_keys file.
+	$ sudo chmod 640 ~/.ssh/authorized_keys
+8. Verify if the password-less SSH is functional.
+	$ ssh localhost
+
+# Install Apache Hadoop
+1. Download the latest stable version of Hadoop. To get the latest version, go to Apache
+Hadoop official download page.
+2. Extract the downloaded file.
+	$ tar -xvzf hadoop-3.3.1.tar.gz
+3. Move the extracted directory to the /usr/local/ directory.
+	$ sudo mv hadoop-3.3.1 /usr/local/hadoop
+4. Create directory to store system logs.
+	$ sudo mkdir /usr/local/hadoop/logs
+5. Change the ownership of the hadoop directory.
+	$ sudo chown -R hadoop:hadoop /usr/local/Hadoop
+
+# Configure Hadoop
+1. Edit file ~/.bashrc to configure the Hadoop environment variables.
+	$ sudo nano ~/.bashrc
+2. Add the following lines to the file. Save and close the file.
+	export HADOOP_HOME=/usr/local/hadoop
+	export HADOOP_INSTALL=$HADOOP_HOME
+	export HADOOP_MAPRED_HOME=$HADOOP_HOME
+	export HADOOP_COMMON_HOME=$HADOOP_HOME
+	export HADOOP_HDFS_HOME=$HADOOP_HOME
+	export YARN_HOME=$HADOOP_HOME
+	export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+	export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+	export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
+3. Add the changes to the memory
+	$ source ~/.bashrc
+
+# Configure Java Environment Variables
+1. Find the OpenJDK directory and copy the output
+	$ readlink -f /usr/bin/javac
+2. Edit the hadoop-env.sh file.
+	$ sudo nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+3. Add the following lines to the file. Then, close and save the file.
+	export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+	export HADOOP_CLASSPATH+=" $HADOOP_HOME/lib/*.jar"
+4. Browse to the hadoop lib directory.
+	$ cd /usr/local/hadoop/lib
+5. Download the Javax activation file.
+	$ sudo wget https://jcenter.bintray.com/javax/activation/javax.activationapi/1.2.0/javax.activation-api-1.2.0.jar
+6. Verify the Hadoop version.
+	$ hadoop version
+7. Edit the core-site.xml configuration file to specify the URL for your NameNode.
+	$ sudo nano $HADOOP_HOME/etc/hadoop/core-site.xml
+8. Add the following lines. Save and close the file.
+	<configuration>
+		<property>
+			<name>fs.default.name</name>
+			<value>hdfs://0.0.0.0:9000</value>
+			<description>The default file system URI</description>
+		</property>
+	</configuration>
+9. Create a directory for storing node metadata and change the ownership to hadoop.
+	$ sudo mkdir -p /home/hadoop/hdfs/{namenode,datanode}
+	$ sudo chown -R hadoop:hadoop /home/hadoop/hdfs
+10. Edit hdfs-site.xml configuration file to define the location for storing node metadata,
+fs-image file.
+	$ sudo nano $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+11. Add the following lines. Close and save the file.
+	<configuration>
+		<property>
+			<name>dfs.replication</name>
+			<value>1</value>
+		</property>
+		<property>
+			<name>dfs.name.dir</name>
+			<value>file:///home/hadoop/hdfs/namenode</value>
+		</property>
+		<property>
+			<name>dfs.data.dir</name>
+			<value>file:///home/hadoop/hdfs/datanode</value>
+		</property>
+		<property>
+			<name>dfs.permissions.enabled</name>
+			<value>false</value>
+		</property>
+	</configuration>
+12. Edit mapred-site.xml configuration file to define MapReduce values.
+	$ sudo nano $HADOOP_HOME/etc/hadoop/mapred-site.xml
+13. Add the following lines. Save and close the file.
+	<configuration>
+		<property>
+			<name>mapreduce.framework.name</name>
+			<value>yarn</value>
+		</property>
+		<property>
+			<name>yarn.app.mapreduce.am.env</name>
+			<value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+			<description>Change this to your hadoop location.</description>
+		</property>
+		<property>
+			<name>mapreduce.map.env</name>
+			<value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+			<description>Change this to your hadoop location.</description>
+		</property>
+		<property>
+			<name>mapreduce.reduce.env</name>
+			<value>HADOOP_MAPRED_HOME=/usr/local/hadoop/<value>
+			<description>Change this to your hadoop location.</description>
+		</property>
+	</configuration>
+14. Edit the yarn-site.xml configuration file and define YARN-related settings.
+	$ sudo nano $HADOOP_HOME/etc/hadoop/yarn-site.xml
+15. Add the following lines. Save and close the file.
+	<configuration>
+		<property>
+			<name>yarn.nodemanager.aux-services</name>
+			<value>mapreduce_shuffle</value>
+		</property>
+	</configuration>
+16. Validate the Hadoop configuration and format the HDFS NameNode.
+	$ hdfs namenode -format
+
+# Access Apache Hadoop Web Interface
+In your web browser enter the URLs given below to access the interface
+	http://localhost:9870
+	http://localhost:8088
+Implementation:
+#HBase installation
+1. Go to the official site and download the most stable version of hbase
+2. Extract the zip file and place it in Hadoop home directory
+3. Open hbase-env.sh in hbase/conf and assign the JAVA_HOME path
+	$ sudo nano hbase/conf/hbase-env.sh
+	export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+4. Edit the .bashrc file
+	$ nano ~/.basrhc
+	export HBASE_HOME=/home/hbuser/hbase
+	export PATH= $PATH:$HBASE_HOME/bin
+5. Read the edited bashrc file to the running memory
+	$ source ~/.bashrc
+6. Add the following properties below the existing ones in the hbase/conf/hbase-site.xml file
+	<property>
+		<name>hbase.rootdir</name>
+		<value>file:///home/hbuser/hbase</value>
+	</property>
+	<property>
+		<name>hbase.zookeeper.property.dataDir</name>
+		<value>/home/hbuser/hbase</value>
+	</property>
+7. Run hbase by typing
+	$ start-hbase.sh
+	$ hbase shell
+
+# Storing and retrieval of data
+# Enter the following command in the hbase shell
+	Create ‘emp’, ‘pri_data’, ‘pro_data’
+	Put ‘emp’, ‘1’, ‘pri_data:name’, ‘Andy’
+	e =get_table
+	e.put ‘1’, ‘pri_data:age’, ‘22’
+	e.put ‘1’, ‘pro_data:post’, ‘asst. manager’
+	e.put ‘1’, ‘pro_data:salary’, ‘40k’
+	e.put ‘2’, ‘pri_data:name’, ‘Icarus’
+	e.put ‘2’, ‘pri_data:age’, ‘22’
+	e.put ‘2’, ‘pro_data:post’, ‘manager’
+	e.get ‘1’
+	e.get ‘2
+
+
+
+-----------------------------------------------------
