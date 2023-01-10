@@ -1,0 +1,640 @@
+Aim: Demonstrate distributed databases environment by dividing given
+global conceptual schema, into vertical and Horizontal fragments and 
+place them on different nodes. Execute queries on these fragments
+
+
+Vertical Fragmentation
+
+----------------------------------------------------------------------------------------------
+
+Connect system
+    Enter password: system
+
+
+> alter user hr identified by hr account unlock;
+
+
+
+Creating Emp_1
+
+create table emp_1 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50));
+insert into emp_1 values('e001','Ajay','Kalyan');
+insert into emp_1 values('e002','Jay','Thane');
+insert into emp_1 values('e003','Karan','Thane');
+insert into emp_1 values('e004','Ronak','Dombivli');
+
+> commit;
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+Now for hr database:
+Connect using : 
+SQL>connect hr
+Password: hr
+
+
+Creating Emp_2 
+create table emp_2 (eno varchar2(4) PRIMARY KEY,email varchar2(50),salary number(7,2));
+insert into emp_2 values ('e001',’ajay@gmail.com’,25000);
+insert into emp_2 values ('e002',’jay@gmail.com’,28000);
+insert into emp_2 values ('e003',’karan@gmail.com’,25000);
+insert into emp_2 values ('e004',’ronak@gmail.com’,27000);
+
+
+>commit;
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+after creating table in hr at "system" this code will come 
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+select ora_database_name from dual;
+
+
+create public database link “prac_3” connect to hr identified by hr using ‘XE’
+
+select*from emp_2@prac_3;
+
+
+SQL> select salary from emp_2@prac_3 where e_no='e001';
+
+SQL> select email from emp_2@prac_3 e2,emp_1@XE e1 where e2.e_no=e1.e_no and e1.ename='Ajay';
+
+SQL> select ename,email from emp_1@XE e1 ,emp_2@prac_3 e2 where e1.e_no=e2.e_no and e1.e_no='e003';
+
+SQL> select ename from emp_1@XE e1,emp_2@prac_3 e2 where e1.e_no=e2.e_no and e2.salary=25000;
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+
+Horizontal Fragmentation
+-------------------------------------------------------------------------------------------------------------------------------------
+open system :-
+
+
+>alter user hr identified by hr account unlock;
+
+
+Creating emp_21 at node 1
+
+create table emp_21 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50), email varchar2(50),salary number(7,2));
+
+insert into emp_21 values(‘e001’,’Salil’,’Andheri’,’salil@gmail.com’,20000);
+
+insert into emp_21 values(‘e003’,’Crima’,’Bandra’,’crima@gmail.com’,20000);
+
+insert into emp_21 values(‘e005’,’Haneet’,’Bandra’,’haneet@gmail.com’,16000);
+
+
+select * from emp_21;
+
+
+>commit;
+
+
+---------------------------------------------------------------------------------------------------------
+
+connect to hr
+enter password 
+connected.
+
+
+Creating emp_22 at node 2
+
+SQL>create table emp_22 (eno varchar2(4) PRIMARY KEY,ename varchar2(10),address varchar2(50), email varchar2(50),salary number(7,2));
+
+SQL>insert into emp_22 values(‘e002’,’Divyata’,’Bandra’,’divyata@gmail.com’,10000);
+insert into emp_22 values(‘e004’,’Harshada’,’Wadala’,’harshada@gmail.com’,10000);
+
+
+select * from emp_22;
+
+
+>commit;
+
+
+-------------------------------------------------------------------------------------------------------
+
+open the "system" and put the command:-
+
+------------------------------------------------------------------------------------------------------------------
+
+create public database link "prac1_link" connect to hr identified by hr using 'XE';
+
+
+SQL>select * from emp_22@prac1_link;
+
+SQL> select salary from emp_21 union select salary from emp_22@prac1_link;
+
+SQL> select email from emp_21 where salary=20000 union
+select email from emp22@ prac1_link where salary=20000;
+
+SQL> select ename,email from emp_22@prac1_link e2 where e2.eno='e002'
+union select ename,email from emp_21 e1 where e1.eno='e002';
+
+SQL> select ename,address from emp_21 e1 where e1.eno='e001' union select ename,email from emp_22@prac1_link e2 where e2.eno='e001';
+
+
+
+
+============================================================================================================================================================================
+===========================================================================================================================================================================================
+========================================================================================================================================================================================
+
+Aim: Create an XML database and demonstrate insert, 
+update and delete operations on these tables. Issue queries on it.
+
+
+SQL> connect system
+	Password: system
+
+
+create table emp(dept_id number(4), emp_spec XMLType);
+insert into emp values(1001,XMLType( 
+'<employees>
+<emp id="001">
+<name>Salil Gala</name>
+<email>salil@gmail.com</email>
+<acc_no>101</acc_no>
+<dateofjoining>1994-12-24</dateofjoining>
+</emp>
+</employees>'));
+
+Insert into emp values(1001,XMLType(
+'<employees>
+<emp id="002">
+<name>Rahul Surya</name>
+<email>rahul@gmail.com</email>
+<acc_no>102</acc_no>
+<dateofjoining>1995-1-21</dateofjoining>
+</emp>
+</employees>'));
+
+
+
+
+Insert into emp values(1002,XMLType(
+'<employees>
+<emp id="003">
+<name>Ramu kaka</name>
+<email>ramurocks@gmail.com</email>
+<acc_no>103</acc_no>
+<dateofjoining>1996-1-5</dateofjoining>
+</emp>
+</employees>'));
+
+
+>select * from emp; 
+
+
+
+1)Retrieve the names of employee from employee table 
+
+>select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names" from emp e;
+
+2) Retrieve the acc_no  of employee from employee table  
+
+>select e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no" from emp e;
+
+
+
+3) Retrieve the names, acc_no, email of employees from employee table  
+
+>select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names",e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no",e.emp_spec.extract('/employees/emp/email/text()').getStringVal() "email" from emp e;
+
+
+
+4) Updating XMLType
+update emp e set emp_spec=XMLType(
+'<employees>
+<emp id="002">
+<name>Shyam</name>
+</emp>
+</employees>')
+where
+e.emp_spec.extract('/employees/emp/@id').getStringVal()='002';
+
+
+SQL> select e.emp_spec.extract('/employees/emp/name/text()').getStringVal() "names" from emp e;
+
+
+5) Deleting an XMLType Column Row
+
+delete from emp e where  e.emp_spec.extract('/employees/emp/@id').getStringVal()='003';
+
+SQL> select e.emp_spec.extract('/employees/emp/acc_no/text()').getStringVal() "acc_no" from   emp e;
+
+
+
+
+
+===============================================================================================================================================================================================================================================================
+===============================================================================================================================================================================================================================================================
+================================================================================================================================================================================================================================================================
+
+
+Aim: Create different types that include attributes and methods.
+Define tables for these types by adding enough tuples.
+Demonstrate insert, update and delete 
+operations on these tables. Execute queries on them.
+
+SQL>connect system
+		Password:system
+
+
+create type addrtype as object (pincode number(6),street varchar2(20),city varchar2(20),state varchar2(20));
+/
+
+
+create type branchtype as object (address addrtype,phone1 number(8),phone2 number(8));
+ /
+
+create type authortype as object (name varchar2(10), addr addrtype);
+/
+
+
+create type branchtabletype as table of branchtype;
+/
+
+
+create type publishertype as object (name varchar2(30), addr addrtype, branches branchtabletype);
+/
+
+create type authorlisttype as varray(2) of ref authortype;
+/
+
+
+create table authors of authortype;
+
+create table books (title varchar2(10), year date ,published_by ref publishertype, authors authorlisttype);
+
+create table publishers of publishertype nested table branches store as branchtable;
+
+-------------------------------------------------------------------------------------------------------------------------
+Table Name: Authors:-
+-----------------------------------------------------------------------------------------------------------------------------
+
+insert into authors values ('Aho',addrtype(400068,'s.v.rd.','Mumbai','Maharashtra'));
+
+insert into authors values ('Stallings',addrtype(400052,'r.t.rd.','Pune','Maharashtra'));
+
+insert into authors values ('Jerry',addrtype(400092,'j.s.rd.','Nashik','Maharashtra'));
+
+insert into authors values ('Provakis',addrtype(500012,'l.t.rd.','Baroda','Gujarat'));
+
+insert into authors values ('Rabiner',addrtype(500014,'s.v.rd.','Nagpur','Maharashtra'));
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Table Name: Publishers:-
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Insert into publishers values ('BPB publication' , addrtype (400068 ,'s.v.rd.','Mumbai','Maharashtra') , branchtabletype(branchtype(addrtype(400068,'s.v.rd.','Mumbai','Maharashtra'),28964401,28946601)));
+
+Insert into publishers values(‘Navneet Prakashan', addrtype (400068,'r.m.rd','Mumbai' , 'Maharashtra'),branchtabletype(branchtype(addrtype(400068,'r.m.rd','mumbai','maharashtra'),28952210,28952211)));
+
+Insert into publishers values(‘Sheth’, addrtype (400068,'r.m.rd',’Mumbai','Maharashtra') , branchtabletype(branchtype(addrtype(500014,'s.v.rd','Nagpur','Maharashtra'),28952210,28952211)));
+
+Insert into publishers values(‘Sheth’, addrtype(500012,'l.t.rd',’Baroda','Gujarat'), branchtabletype(branchtype(addrtype(500012,'l.t.rd','Baroda','Gujarat'),28952295,28951210)));
+
+select * from publishers;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Table Name: Books
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+insert into books select ‘Java’,’20-may-1983’,ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name=’BPB publication’ and aut.name=’Stallings’;
+
+insert into books select ‘Compiler’,’20-june-1980’,ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name=’Navneet Prakashan’ and aut.name=’Aho’;
+
+insert into books select ‘AI’,’25-june-1540’,ref(pub),authorlisttype(ref(aut)) from publishers pub,authors aut where pub.name=’Sheth’ and aut.name=’Jerry’;
+
+
+Select * from books;
+
+
+a) List all of the authors that have the same address as their publisher
+
+select a.name from authors a, publishers p where a.addr = p.addr;
+
+
+b) List all of the authors that have the same pin code as their publisher
+
+select a.name from authors a,publishers p where p.addr.pincode=a.addr.pincode;
+
+
+c) List all books that have 2 or more authors
+
+Select b.title from books b where 1< (select count(*) from table(b.authors));
+
+
+d) List the title of the book that has the most authors
+
+Select title from books b, table(b.authors) group by title having count(*) = (select max(count(*)) from books b, table(b.authors) group by title);
+
+
+e) List the name of the publisher that has the most branches
+
+Select p.name from publishers p, table(p.branches) group by p.name having count(*)>=all (select count(*) from publishers p, table(p.branches) group by name);
+
+
+f) Name of authors who have not published a book
+
+select (a.name) from authors a minus select a.name from books b, table(b.authors) b1, authors a where b1.column_value=ref(a);
+
+g) Move all the branches that belong to the publisher 'tata' to the publisher ‘‘joshi'
+
+insert into table(select branches from publishers where name = 'Navneet Prakashan') select b.* from publishers p, table(p.branches) b where name = 'Sheth';
+
+
+h) List all authors who have published more than one book
+
+select a.name from authors a, books b, table(b.authors) b1 where b1.column_value =ref(a) group by a.name having count(*) > 1; 
+
+
+i) List all books (title) where the same author appears more than once on the list of authors (assuming that an integrity constraint requiring that the name of an author is unique in a list of authors has not been specified).
+
+select title from authors a, books b, table(b.authors) v where v.column_value = ref(a) group by title having count(*) > 1;
+
+
+
+
+
+
+==========================================================================================================================================================================================================================================================
+===========================================================================================================================================================================================================================================================
+==============================================================================================================================================================================================================================================
+
+Aim: Create a table that stores spatial data and issues queries on it.
+
+
+Procedure: SQL>connect system
+		Password: system
+
+
+SQL> create table market (mkt_no number(3) primary key,mkt_name varchar2(20),mkt_shape mdsys.sdo_geometry);
+
+
+Inserting values:
+1)This  insert query inserts the abc shape in the table.
+
+insert into market values(
+1,
+'abc',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array(1,1003,3), -- one rectangle (1003 =exterior)
+mdsys.sdo_ordinate_array(1,1, 5,7) 
+-- only 2 points needed to
+-- define rectangle (lower left and upper right) with
+-- Cartesian-coordinate data
+)
+)
+/
+
+
+2) This insert query inserts the pqr shape in the table.
+
+insert into market values(
+2,
+'pqr',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array (1,1003,1), 
+-- one polygon (exterior polygon ring)
+mdsys.sdo_ordinate_array (5,1, 8,1, 8,6, 5,7, 5,1)
+)
+)
+/
+
+
+
+3) This insert query inserts the mno shape in the table.
+
+
+insert into market values(
+3,
+'mno',
+mdsys.sdo_geometry (
+2003, -- 2-dimensional polygon
+NULL,
+NULL,
+mdsys.sdo_elem_info_array (1,1003,1), 
+-- one polygon (exterior polygon ring)
+mdsys.sdo_ordinate_array (3,3,6,3,6,5,4,5,3,3)
+)
+)
+/
+
+
+4)This insert query inserts the xyz shape in the table.
+
+Insert into market values(
+4,
+’xyz’,
+mdsys.sdo_geometry(
+2003, -- 2-dimensional polygon
+NULL,NULL, mdsys.sdo_elem_info_array(1,1003,4), -- one circle
+mdsys.sdo_ordinate_array(8,7, 10,9, 8,11)
+)
+)
+/
+
+
+View Table:
+
+select * from market;
+
+
+
+SQL>create table university(shape mdsys.sdo_geometry);
+
+insert into user_sdo_geom_metadata values (
+’university’,
+’shape’,
+mdsys.sdo_dim_array( 
+mdsys.sdo_dim_element(’x’, 0, 20, 0.005),
+mdsys.sdo_dim_element(’y’, 0, 20, 0.005)
+),
+ NULL
+)
+/
+
+
+
+create index university_spatial_idx
+
+on university(shape)
+
+indextype is mdsys.spatial_index;
+
+select * from user_sdo_geom_metadata;
+
+
+
+
+1) Topological intersection of two geometries.
+
+select sdo_geom.sdo_intersection(c_a.mkt_shape, c_c.mkt_shape, 0.005)
+from market c_a, market c_c
+
+where c_a.mkt_name = 'abc' and c_c.mkt_name = 'mno';
+
+
+
+2) Do two geometries have any spatial relationship?
+
+SQL>select sdo_geom.relate(c_b.mkt_shape, 'anyinteract', c_d.mkt_shape, 0.005)
+from market c_b, market c_d
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+SQL>select sdo_geom.relate(c_b.mkt_shape, 'anyinteract', c_d.mkt_shape, 0.005)
+from market c_b, market c_d
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+
+
+3) Return the areas of all different locations.
+
+select mkt_name, sdo_geom.sdo_area(mkt_shape, 0.005) from market;
+
+
+
+4) Return the area of just abc.
+
+select mkt_name, sdo_geom.sdo_area(mkt_shape, 0.005) from market
+
+where mkt_name = 'abc';
+
+
+5) Return the distance between two geometries.
+
+select sdo_geom.sdo_distance(c_b.mkt_shape, c_d.mkt_shape, 0.005)
+
+from market c_b, market c_d
+
+where c_b.mkt_name = 'pqr' and c_d.mkt_name = 'xyz';
+
+
+6)Is a geometry valid?
+
+select mkt_name, sdo_geom.validate_geometry_with_context(mkt_shape, 0.005)
+
+from market where mkt_name = 'mno';
+
+
+
+========================================================================================================================================================================
+========================================================================================================================================================================
+========================================================================================================================================================================
+
+Aim: Create a table that stores temporal data and issues queries on it.
+
+Procedure: SQL>connect system
+		Password: system
+
+
+Create table tblEmp_Appnt (empno number(3),empname varchar2(20),recruit_date date, retire_date date);
+
+insert into tblEmp_Appnt values(1,’Sahil’,to_date(sysdate,’DD-MM-YYYY’), to_date(’25-10-2023’, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(2,’Mooti’, to_date(’18-11-1999’,’DD-MM-YYYY’),to_date (sysdate, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(3,’Nobita’,to_date(’2-3-2001’,’DD-MM-YYYY’), to_date (’2-10-2005’,’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(4,’Madre’,to_date(’2-8-1989’,’DD-MM-YYYY’), to_date (’4-5-2001’, ’DD-MM-YYYY’));
+
+insert into tblEmp_Appnt values(5,’Pooja’,to_date(’5-12-1999’,’DD-MM-YYYY’), to_date (’6-11-2006’,’DD-MM-YYYY’));
+
+select * from tblEmp_Appnt;
+
+
+
+1) Find all the employees who join the company on 2/3/2001
+
+SQL> select empname from tblEmp_Appnt where recruit_date=to_date('2-3-2001','DD-MM-YYYY');
+
+
+b) Find all the employees who will retired  on 6/11/2006
+
+SQL> select empname from tblEmp_Appnt where retire_date=to_date('6-11-2006','DD-MM-YYYY');
+
+
+
+SQL>alter session set nls_date_format = ‘HH:MI’;
+
+
+SQL>create table tbl_share (name varchar2(20),no_shares number(5),price number(7,2),trans_time date);
+
+insert into tbl_share values ('Infosys',120,1200,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Sintex',12,1540,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Titan',160,154,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Reliance',100,1700,to_date(sysdate,'HH:Mi'));
+
+insert into tbl_share values ('Tata Steel',10,2700,to_date(sysdate,'HH:Mi'));
+
+select * from tbl_share;
+
+
+
+1) Find all the names of a company whose share price is more than Rs. 1000 at   14:21 A.M. 
+
+SQL> select name from tbl_shares where (no_shares*price)>10000 and trans_time=to_date('09:31','HH:MI');
+
+
+2)Find the name of company which has highest share price at 2.24 P.M.
+
+SQL> select max(no_shares*price) from tbl_shares where trans_time=to_date('09:32','HH:MI');
+select name from  tbl_shares  where no_shares*price= (select max(no_shares*price) from tbl_shares where trans_time=to_date('09:32','HH:MI'))
+/
+
+
+=========================================================================================================================================================================================
+========================================================================================================================================================================================================
+============================================================================================================================================================================================
+
+Aim: Demonstrate the Accessing and Storing and performing CRUD operations in a. MongoDB
+
+
+Procedure: CRUD stands for Create, Read, Update, Delete.
+
+
+1)CREATE
+
+use COLLEGE
+
+db.Student.insert({student_id : 001, name : “Vijay”, roll_no : 1, division : “A”})
+db.Student.insert({student_id : 002, name : “Jay”, roll_no : 2, division : “A”})
+
+
+2)READ
+
+db.Student.find()
+
+3)UPDATE
+
+db.Student.update({name : “Jay”}, {$set:{name : “Raju”}})
+
+
+4)DELETE
+db.Student.remove({name : “Vijay”})
+db.Student.drop()
+
+
+===============================================================================================================================================================================================================
+======================================================================================================================================================================================================================
+=================================================================================================================================================================================================================
+
